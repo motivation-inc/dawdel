@@ -2,6 +2,15 @@ pub trait NoteData {
     fn note_data(&self) -> Vec<Note>;
 }
 
+/// Converts a note name into the corresponding midi note number.
+///
+/// # Examples
+///
+/// ```rust
+/// let note_num = note!(C, 4);
+///
+/// assert_eq!(note_num, 60)
+/// ```
 #[macro_export]
 macro_rules! note {
     (C, $oct:literal) => {
@@ -42,6 +51,7 @@ macro_rules! note {
     };
 }
 
+/// A note object, containing pitch (0-127), start time, duration, and velocity.
 #[derive(Debug, Clone)]
 pub struct Note {
     pub pitch: u8,
@@ -51,6 +61,13 @@ pub struct Note {
 }
 
 impl Note {
+    /// Constructs a new note object, where `pitch` is numbers 0-127, `start` and `duration` are in seconds, and `velocity` is numbers 0-127.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let note = Note::new(60, 0.0, 2.0, 127); // C4 at 2 seconds long with full velocity
+    /// ```
     pub fn new(pitch: u8, start: f32, duration: f32, velocity: u8) -> Self {
         Self {
             pitch,
@@ -70,6 +87,15 @@ impl NoteData for Note {
     }
 }
 
+/// Converts a chord name into the corresponding midi note numbers.
+///
+/// # Examples
+///
+/// ```rust
+/// let note_nums = chord!(maj note!(C, 4));
+///
+/// assert_eq!(note_nums, vec![60, 64, 67])
+/// ```
 #[macro_export]
 macro_rules! chord {
     (maj $root:expr) => {
@@ -89,6 +115,7 @@ macro_rules! chord {
     };
 }
 
+/// A chord object, containing a Vec of note pitches (the chord), start time, duration, and velocity.
 #[derive(Debug, Clone)]
 pub struct Chord {
     pub notes: Vec<u8>,
@@ -98,6 +125,13 @@ pub struct Chord {
 }
 
 impl Chord {
+    /// Constructs a new chord object, where `notes` is a Vec of numbers each index in the range 0-127, `start` and `duration` are in seconds, and `velocity` is numbers 0-127.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let chord = Chord::new(vec![60, 64, 67], 0.0, 2.0, 127); // Csus4 chord at 2 seconds long with full velocity
+    /// ```
     pub fn new(notes: Vec<u8>, start: f32, duration: f32, velocity: u8) -> Self {
         Self {
             notes,
