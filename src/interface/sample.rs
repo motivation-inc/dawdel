@@ -1,6 +1,6 @@
 use hound::WavReader;
 
-/// A sample object based on a `.wav` file and root note representing the general pitch shift of the sound sample.
+/// A `.wav` file sample object and root note representing the general pitch shift of the sound sample.
 #[derive(Debug, Clone)]
 pub struct Sample {
     pub root_note: u8,
