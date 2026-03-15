@@ -4,6 +4,7 @@ use hound::WavReader;
 #[derive(Debug, Clone)]
 pub struct Sample {
     pub root_note: u8,
+    pub pan: f32, // -1.0 to +1.0
     pub sample_rate: u32,
     pub data: Vec<f32>,
 }
@@ -26,8 +27,16 @@ impl Sample {
 
         Self {
             root_note,
+            pan: 0.0,
             sample_rate: sample_rate,
             data,
         }
+    }
+
+    /// Set the stereo panning of the sample (-1.0 to 1.0, where negative values pan left, and positive values pan right)
+    ///
+    /// By default, panning is set to 0.0 (centered) when using `Sample::new()`
+    pub fn set_pan(&mut self, pan: f32) {
+        self.pan = pan
     }
 }

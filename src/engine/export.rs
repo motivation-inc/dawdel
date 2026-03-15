@@ -8,10 +8,10 @@ fn beats_to_ticks(beats: f32, tpq: u16) -> u32 {
     (beats * tpq as f32) as u32
 }
 
-/// Renders all track samples + notes into a single master buffer
-fn render_tracks_wav(tracks: &Vec<Track>) -> (u32, Vec<f32>) {
+/// Renders all track samples + notes into two left and right master buffers
+fn render_tracks_wav(tracks: &Vec<Track>) -> (u32, Vec<f32>, Vec<f32>) {
     if tracks.is_empty() {
-        return (0, Vec::new());
+        return (44100, Vec::new(), Vec::new());
     }
 
     // assume same sample rate across samples
@@ -23,20 +23,25 @@ fn render_tracks_wav(tracks: &Vec<Track>) -> (u32, Vec<f32>) {
         .fold(0.0, f32::max);
     let total_samples = (song_duration * (sample_rate) as f32) as usize;
 
-    // master mix buffer
-    let mut master = vec![0.0f32; total_samples];
+    // mix buffers
+    let mut left = vec![0.0f32; total_samples];
+    let mut right = vec![0.0f32; total_samples];
 
     for track in tracks {
         let sample = track.sample();
         let sample_data = &sample.data;
         let root_note = sample.root_note;
+        let pan = sample.pan;
 
         for note in track.notes() {
             let start_index = (note.start * (60.0 / bpm) * sample_rate as f32) as usize;
+
             let pitch_ratio = 2f32.powf((note.pitch as f32 - root_note as f32) / 12.0);
+
             let velocity = note.velocity;
 
             let max_samples = (note.duration * (60.0 / bpm) * sample_rate as f32) as usize;
+
             let mut i = 0usize;
 
             while i < max_samples {
@@ -48,39 +53,50 @@ fn render_tracks_wav(tracks: &Vec<Track>) -> (u32, Vec<f32>) {
 
                 let dest_index = start_index + i;
 
-                if dest_index >= master.len() {
+                if dest_index >= total_samples {
                     break;
                 }
 
-                master[dest_index] += sample_data[source_index] * velocity;
+                let s = sample_data[source_index] * velocity;
+
+                // constant power panning
+                let angle = (pan + 1.0) * std::f32::consts::FRAC_PI_4;
+                let l = s * angle.cos();
+                let r = s * angle.sin();
+
+                left[dest_index] += l;
+                right[dest_index] += r;
 
                 i += 1;
             }
         }
     }
 
-    (sample_rate, master)
+    (sample_rate, left, right)
 }
 
 pub fn export_wav(name: &str, tracks: &Vec<Track>) {
-    let (sample_rate, samples) = render_tracks_wav(tracks);
+    let (sample_rate, left, right) = render_tracks_wav(tracks);
 
     let spec = hound::WavSpec {
-        channels: 1,
-        sample_rate: sample_rate,
+        channels: 2,
+        sample_rate,
         bits_per_sample: 16,
         sample_format: hound::SampleFormat::Int,
     };
 
     let mut writer = hound::WavWriter::create(format!("{}.wav", name), spec).unwrap();
 
-    for s in samples {
-        let amp = (s * i16::MAX as f32).clamp(i16::MIN as f32, i16::MAX as f32) as i16;
+    for i in 0..left.len() {
+        let l = (left[i] * i16::MAX as f32).clamp(i16::MIN as f32, i16::MAX as f32) as i16;
 
-        writer.write_sample(amp).unwrap();
+        let r = (right[i] * i16::MAX as f32).clamp(i16::MIN as f32, i16::MAX as f32) as i16;
+
+        writer.write_sample(l).unwrap();
+        writer.write_sample(r).unwrap();
     }
 
-    writer.finalize().unwrap();
+    writer.finalize().unwrap()
 }
 
 pub fn export_midi(name: &str, song: &Song) {
