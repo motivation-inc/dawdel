@@ -56,7 +56,7 @@ impl Track {
         self.current_beat
     }
 
-    /// Appends a note to the track, with `pitch` midi numbers 1-127, `velocity` midi numbers 1-127, `start` and `duration` in beats.
+    /// Appends a note to the track, with `pitch` midi numbers 0-127, `velocity` midi numbers 0-127, `start` and `duration` in beats.
     ///
     /// # Example
     ///
@@ -79,7 +79,7 @@ impl Track {
         });
     }
 
-    /// Appends a chord to the track, with `notes` a Vec of indexes midi numbers 1-127, `velocity` midi numbers 1-127, `start` and `duration` in beats.
+    /// Appends a chord to the track, with `notes` a Vec of indexes midi numbers 0-127, `velocity` midi numbers 0-127, `start` and `duration` in beats.
     ///
     /// # Example
     ///
