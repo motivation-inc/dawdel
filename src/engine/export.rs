@@ -1,23 +1,24 @@
-use std::fs::File;
-
 use crate::interface::{Song, Track};
 use midly::num::{u4, u7, u15, u24, u28};
 use midly::{Format, Header, MetaMessage, MidiMessage, Smf, Timing, TrackEvent, TrackEventKind};
+use std::fs::File;
 
 fn beats_to_ticks(beats: f32, tpq: u16) -> u32 {
     (beats * tpq as f32) as u32
 }
 
 /// Renders all track samples + notes into two left and right master buffers
-fn render_tracks_wav(sample_rate: u32, tracks: &Vec<Track>) -> (Vec<f32>, Vec<f32>) {
+fn render_tracks_wav(sample_rate: u32, song: &Song) -> (Vec<f32>, Vec<f32>) {
+    let tracks = song.clone().tracks();
+
     if tracks.is_empty() {
         return (Vec::new(), Vec::new());
     }
 
-    let bpm = tracks[0].bpm();
+    let bpm = song.bpm();
     let song_duration = tracks
         .iter()
-        .map(|t| t.current_beat() * (60.0 / bpm))
+        .map(|t| (t.current_beat() + t.offset()) * (60.0 / bpm))
         .fold(0.0, f32::max);
     let total_samples = (song_duration * (sample_rate) as f32) as usize;
 
@@ -32,12 +33,10 @@ fn render_tracks_wav(sample_rate: u32, tracks: &Vec<Track>) -> (Vec<f32>, Vec<f3
         let pan = sample.pan;
 
         for note in track.notes() {
-            let start_index = (note.start * (60.0 / bpm) * sample_rate as f32) as usize;
-
+            let start_index =
+                ((note.start + track.offset()) * (60.0 / bpm) * sample_rate as f32) as usize;
             let pitch_ratio = 2f32.powf((note.pitch as f32 - root_note as f32) / 12.0);
-
             let velocity = note.velocity;
-
             let max_samples = (note.duration * (60.0 / bpm) * sample_rate as f32) as usize;
 
             let mut i = 0usize;
@@ -73,8 +72,8 @@ fn render_tracks_wav(sample_rate: u32, tracks: &Vec<Track>) -> (Vec<f32>, Vec<f3
     (left, right)
 }
 
-pub fn export_wav(name: &str, sample_rate: u32, tracks: &Vec<Track>) {
-    let (left, right) = render_tracks_wav(sample_rate, tracks);
+pub fn export_wav(name: &str, sample_rate: u32, song: &Song) {
+    let (left, right) = render_tracks_wav(sample_rate, song);
 
     let spec = hound::WavSpec {
         channels: 2,
@@ -82,12 +81,10 @@ pub fn export_wav(name: &str, sample_rate: u32, tracks: &Vec<Track>) {
         bits_per_sample: 16,
         sample_format: hound::SampleFormat::Int,
     };
-
     let mut writer = hound::WavWriter::create(format!("{}.wav", name), spec).unwrap();
 
     for i in 0..left.len() {
         let l = (left[i] * i16::MAX as f32).clamp(i16::MIN as f32, i16::MAX as f32) as i16;
-
         let r = (right[i] * i16::MAX as f32).clamp(i16::MIN as f32, i16::MAX as f32) as i16;
 
         writer.write_sample(l).unwrap();
@@ -111,8 +108,11 @@ pub fn export_midi(name: &str, song: &Song) {
         let mut events: Vec<(u32, TrackEventKind)> = Vec::new();
 
         for note in track.notes() {
-            let start = beats_to_ticks(note.start, ticks_per_beat);
-            let end = beats_to_ticks(note.start + note.duration, ticks_per_beat);
+            let start = beats_to_ticks(note.start + track.offset(), ticks_per_beat);
+            let end = beats_to_ticks(
+                (note.start + note.duration) + track.offset(),
+                ticks_per_beat,
+            );
 
             events.push((
                 start,

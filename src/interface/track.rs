@@ -1,6 +1,6 @@
 use crate::interface::{note::Note, sample::Sample};
 
-/// A track object, containing an audio sample, midi channel, and a Vec of note objects.
+/// A track object, containing an audio sample, midi channel, and a `Vec` of note objects.
 #[derive(Debug, Clone)]
 pub struct Track {
     bpm: f32,
@@ -8,6 +8,7 @@ pub struct Track {
     channel: u8,
     notes: Vec<Note>,
     current_beat: f32,
+    offset: f32,
 }
 
 impl Track {
@@ -16,7 +17,6 @@ impl Track {
     /// # Example
     ///
     /// ```
-    /// let mut song = Song::new(120);
     /// let track1 = Track::new(Sample::new("my_samples/piano.wav", 60), 0, 120);
     ///
     /// assert_eq!(track1.channel(), 0);
@@ -28,6 +28,7 @@ impl Track {
             channel,
             notes: Vec::new(),
             current_beat: 0.0,
+            offset: 0.0,
         }
     }
 
@@ -56,13 +57,17 @@ impl Track {
         self.current_beat
     }
 
+    /// Returns the track offset amount.
+    pub fn offset(&self) -> f32 {
+        self.offset
+    }
+
     /// Appends a note to the track, with `pitch` midi numbers 0-127, `velocity` midi numbers 0-127, `start` and `duration` in beats.
     ///
     /// # Example
     ///
     /// ```
-    /// let mut song = Song::new(120);
-    /// let mut track1 = song.track(Sample::new("my_samples/piano.wav", 60), 0);
+    /// let mut track1 = Track::new(Sample::new("my_samples/piano.wav", 60), 0);
     ///
     /// track1.note(60, 127, 0.0, 2.0); // C4 at full velocity, played for 2 beats
     /// ```
@@ -84,8 +89,7 @@ impl Track {
     /// # Example
     ///
     /// ```
-    /// let mut song = Song::new(120);
-    /// let mut track1 = song.track(Sample::new("my_samples/piano.wav", 60), 0);
+    /// let mut track1 = Track::new(Sample::new("my_samples/piano.wav", 60), 0);
     ///
     /// track1.chord(vec![60, 64, 67], 127, 0.0, 2.0); // Csus4 at full velocity, played for 2 beats
     /// ```
@@ -102,5 +106,17 @@ impl Track {
                 duration,
             });
         }
+    }
+
+    /// Offset the track to `offset`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// let mut track1 = Track::new(Sample::new("my_samples/piano.wav", 60), 0);
+    /// track1.set_offset(2.0); // offset by 2 beats, during export the track will start playing at 2 beats
+    /// ```
+    pub fn set_offset(&mut self, offset: f32) {
+        self.offset = offset;
     }
 }

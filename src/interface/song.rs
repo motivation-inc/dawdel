@@ -167,7 +167,7 @@ impl Song {
                 }
             }
             ExportType::WAV(sample_rate) => {
-                export_wav(name, sample_rate, &self.tracks);
+                export_wav(name, sample_rate, self);
                 let file_name = format!("{}.wav", name);
 
                 if open_in_default_app {
