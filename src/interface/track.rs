@@ -1,6 +1,7 @@
 use crate::interface::{note::Note, sample::Sample};
 
 /// A track object, containing an audio sample, midi channel, and a Vec of note objects.
+#[derive(Debug, Clone)]
 pub struct Track {
     bpm: f32,
     sample: Sample,

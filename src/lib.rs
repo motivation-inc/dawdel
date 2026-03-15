@@ -1,2 +1,2 @@
-pub mod audio_engine;
+pub mod engine;
 pub mod interface;

@@ -2,7 +2,7 @@ use dawdel::interface::{ExportType, Sample, Song};
 use dawdel::{chord, note};
 
 fn main() {
-    let mut song = Song::new(60.0);
+    let mut song = Song::new(120.0);
     let track1 = song.track(Sample::new("test.wav", 60), 1);
 
     for _ in 0..8 {

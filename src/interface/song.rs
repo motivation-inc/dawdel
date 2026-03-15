@@ -1,9 +1,9 @@
-use crate::audio_engine::export_wav;
+use crate::engine::{export_midi, export_wav};
 use crate::interface::Sample;
 use crate::interface::track::Track;
-use midly::num::{u4, u7, u15, u28};
-use midly::{Format, Header, MetaMessage, MidiMessage, Smf, Timing, TrackEvent, TrackEventKind};
-use std::fs::File;
+use midly::{MetaMessage, MidiMessage, Smf, Timing, TrackEventKind};
+use std::collections::HashMap;
+use std::fs::{self};
 
 pub enum ExportType {
     MIDI,
@@ -11,13 +11,10 @@ pub enum ExportType {
 }
 
 /// A song object containing all track objects and a BPM variable.
+#[derive(Debug, Clone)]
 pub struct Song {
     bpm: f32,
     tracks: Vec<Track>,
-}
-
-fn beats_to_ticks(beats: f32, tpq: u16) -> u32 {
-    (beats * tpq as f32) as u32
 }
 
 impl Song {
@@ -26,6 +23,90 @@ impl Song {
         Self {
             bpm,
             tracks: Vec::new(),
+        }
+    }
+
+    /// Loads the midi `file` into seperated tracks using `sample`.
+    pub fn load_midi(&mut self, file: &str, sample: Sample) {
+        let data = fs::read(file).expect("Failed to read MIDI file");
+        let smf = Smf::parse(&data).expect("Invalid MIDI");
+
+        let ticks_per_beat = match smf.header.timing {
+            Timing::Metrical(t) => t.as_int() as f32,
+            _ => panic!("Unsupported MIDI timing format"),
+        };
+        let mut bpm: f32 = 120.0;
+
+        // active notes: (channel, pitch) -> (start_tick, velocity)
+        let mut active_notes: HashMap<(u8, u8), (u32, u8)> = HashMap::new();
+
+        for midi_track in smf.tracks {
+            let mut absolute_tick: u32 = 0;
+
+            for event in midi_track {
+                absolute_tick += event.delta.as_int();
+
+                if let TrackEventKind::Meta(MetaMessage::Tempo(us_per_beat)) = event.kind {
+                    let us = us_per_beat.as_int() as f32;
+
+                    if us > 0.0 {
+                        bpm = 60_000_000.0 / us as f32;
+                    }
+                }
+
+                if let TrackEventKind::Midi { channel, message } = event.kind {
+                    match message {
+                        MidiMessage::NoteOn { key, vel } if vel > 0 => {
+                            active_notes.insert(
+                                (channel.as_int(), key.as_int()),
+                                (absolute_tick, vel.as_int()),
+                            );
+                        }
+
+                        MidiMessage::NoteOff { key, vel } | MidiMessage::NoteOn { key, vel }
+                            if vel == 0 =>
+                        {
+                            if let Some((start_tick, velocity)) =
+                                active_notes.remove(&(channel.as_int(), key.as_int()))
+                            {
+                                let duration_ticks = absolute_tick - start_tick;
+
+                                let start_beats = start_tick as f32 / ticks_per_beat;
+                                let duration_beats = duration_ticks as f32 / ticks_per_beat;
+
+                                let velocity_norm = velocity as f32 / 127.0;
+
+                                if let Some(track) = self
+                                    .tracks
+                                    .iter_mut()
+                                    .find(|t| t.channel() == channel.as_int())
+                                {
+                                    track.note(
+                                        key.as_int(),
+                                        (velocity_norm * 127.0) as u8,
+                                        start_beats,
+                                        duration_beats,
+                                    );
+                                } else {
+                                    let mut track =
+                                        Track::new(sample.clone(), channel.as_int(), bpm);
+
+                                    track.note(
+                                        key.as_int(),
+                                        (velocity_norm * 127.0) as u8,
+                                        start_beats,
+                                        duration_beats,
+                                    );
+
+                                    self.tracks.push(track);
+                                }
+                            }
+                        }
+
+                        _ => {}
+                    }
+                }
+            }
         }
     }
 
@@ -74,7 +155,8 @@ impl Song {
     pub fn export(&self, name: &str, export_type: ExportType, open_in_default_app: bool) {
         match export_type {
             ExportType::MIDI => {
-                let file_name = self.export_midi(name);
+                export_midi(name, self);
+                let file_name = format!("{}.mid", name);
 
                 if open_in_default_app {
                     open::that(&file_name).expect("Error opening export");
@@ -90,87 +172,5 @@ impl Song {
             }
             _ => {}
         }
-    }
-
-    fn export_midi(&self, name: &str) -> String {
-        let ticks_per_beat: u16 = 480;
-
-        let header = Header {
-            format: Format::Parallel,
-            timing: Timing::Metrical(u15::from(ticks_per_beat)),
-        };
-
-        let mut midi_tracks = Vec::new();
-
-        for track in &self.tracks {
-            let mut events: Vec<(u32, TrackEventKind)> = Vec::new();
-
-            for note in track.notes() {
-                let start = beats_to_ticks(note.start, ticks_per_beat);
-                let end = beats_to_ticks(note.start + note.duration, ticks_per_beat);
-
-                let velocity = (note.velocity * 127.0) as u8;
-
-                // NOTE ON
-                events.push((
-                    start,
-                    TrackEventKind::Midi {
-                        channel: u4::from(track.channel()),
-                        message: MidiMessage::NoteOn {
-                            key: u7::from(note.pitch),
-                            vel: u7::from(velocity),
-                        },
-                    },
-                ));
-
-                // NOTE OFF
-                events.push((
-                    end,
-                    TrackEventKind::Midi {
-                        channel: u4::from(track.channel()),
-                        message: MidiMessage::NoteOff {
-                            key: u7::from(note.pitch),
-                            vel: u7::from(0),
-                        },
-                    },
-                ));
-            }
-
-            // Sort events by time
-            events.sort_by_key(|e| e.0);
-
-            // Convert absolute time → delta time
-            let mut last_time = 0;
-            let mut track_events = Vec::new();
-
-            for (time, kind) in events {
-                let delta = time - last_time;
-                last_time = time;
-
-                track_events.push(TrackEvent {
-                    delta: u28::from(delta),
-                    kind,
-                });
-            }
-
-            // End of track event
-            track_events.push(TrackEvent {
-                delta: u28::from(0),
-                kind: TrackEventKind::Meta(MetaMessage::EndOfTrack),
-            });
-
-            midi_tracks.push(track_events);
-        }
-
-        let smf = Smf {
-            header,
-            tracks: midi_tracks,
-        };
-
-        let file_name = format!("{}.mid", name);
-        let mut file = File::create(&file_name).unwrap();
-        smf.write_std(&mut file).unwrap();
-
-        file_name
     }
 }
