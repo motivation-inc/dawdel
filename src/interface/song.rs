@@ -35,7 +35,7 @@ impl Song {
     /// # Example
     ///
     /// ```
-    /// let mut song = Song::new(120);
+    /// let mut song = Song::new(120.0);
     /// song.load_midi("Bach.mid", Sample::new("my_samples/piano.wav", 60), 2.0); // load the midi data at 2 beats with a piano sound sample.
     /// ```
     pub fn load_midi(&mut self, file: &str, sample: Sample, starting_beat: f32) {
@@ -114,19 +114,35 @@ impl Song {
         }
     }
 
-    /// Constructs a new track object and appends it to the song.
+    /// Constructs a new track object using the song bpm.
+    ///
+    /// _This function will not add the track object to the song, use `add_track` to append the track to the song._
     ///
     /// # Example
     ///
     /// ```
-    /// let mut song = Song::new(120);
-    /// let track1 = song.track(Sample::new("my_samples/piano.wav", 60), 0);
+    /// let mut song = Song::new(120.0);
+    /// let track1 = song.create_track(Sample::new("my_samples/piano.wav", 60), 0);
     ///
-    /// assert_eq!(track1.channel(), 0);
+    /// assert_eq!(track1.bpm(), 120.0);
     /// ```
-    pub fn track(&mut self, sample: Sample, channel: u8) -> &mut Track {
-        self.tracks.push(Track::new(sample, channel, self.bpm));
-        self.tracks.last_mut().unwrap()
+    pub fn create_track(&self, sample: Sample, channel: u8) -> Track {
+        Track::new(sample, channel, self.bpm)
+    }
+
+    /// Adds `track` to the list of tracks contained in the song.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// let mut song = Song::new(120.0);
+    /// let track1 = song.create_track(Sample::new("my_samples/piano.wav", 60), 0);
+    ///
+    /// song.add_track(track1);
+    /// assert_eq!(song.tracks()[0].bpm(), 120.0);
+    /// ```
+    pub fn add_track(&mut self, track: Track) {
+        self.tracks.push(track);
     }
 
     /// Returns the beats per minute (bpm) of the song.
@@ -134,9 +150,9 @@ impl Song {
     /// # Example
     ///
     /// ```
-    /// let song = Song::new(120);
+    /// let song = Song::new(120.0);
     ///
-    /// assert_eq!(song.bpm(), 120);
+    /// assert_eq!(song.bpm(), 120.0);
     /// ```
     pub fn bpm(&self) -> f32 {
         self.bpm
@@ -147,8 +163,9 @@ impl Song {
     /// # Example
     ///
     /// ```
-    /// let mut song = Song::new(120);
-    /// let track1 = song.track(Sample::new("my_samples/piano.wav", 60), 0);
+    /// let mut song = Song::new(120.0);
+    /// let track1 = song.create_track(Sample::new("my_samples/piano.wav", 60), 0);
+    /// song.add_track(track1);
     ///
     /// assert_eq!(song.tracks()[0].channel(), 0);
     /// ```
@@ -156,6 +173,19 @@ impl Song {
         &self.tracks
     }
 
+    /// Export the all tracks with the file `name` and type `export_type`.
+    /// `open_in_default_app` will open the exported file in the default app for that file type.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// let mut song = Song::new(120.0);
+    /// let mut track1 = song.create_track(Sample::new("my_samples/piano.wav", 60), 0);
+    /// track1.note(note!(C, 4), 127, track1.current_beat(), 2.0);
+    ///
+    /// song.add_track(track1);
+    /// song.export("my_song", ExportType::MIDI, true); // exports `my_song.mid` and opens it in a default application
+    /// ```
     pub fn export(&self, name: &str, export_type: ExportType, open_in_default_app: bool) {
         match export_type {
             ExportType::MIDI => {

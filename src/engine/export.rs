@@ -28,9 +28,9 @@ fn render_tracks_wav(sample_rate: u32, song: &Song) -> (Vec<f32>, Vec<f32>) {
 
     for track in tracks {
         let sample = track.sample();
-        let sample_data = &sample.data;
-        let root_note = sample.root_note;
-        let pan = sample.pan;
+        let sample_data = sample.data();
+        let root_note = sample.root_note();
+        let pan = sample.pan();
 
         for note in track.notes() {
             let start_index =

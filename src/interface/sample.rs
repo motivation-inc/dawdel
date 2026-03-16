@@ -11,10 +11,10 @@ use crate::interface::Effect;
 /// A sample object containing sound data, panning, sample rates, and a root note representing the general pitch shift of the sample.
 #[derive(Debug, Clone)]
 pub struct Sample {
-    pub root_note: u8,
-    pub pan: f32, // -1.0 to +1.0
-    pub sample_rate: u32,
-    pub data: Vec<(f32, f32)>, // L, R
+    root_note: u8,
+    pan: f32, // -1.0 to +1.0
+    sample_rate: u32,
+    data: Vec<(f32, f32)>, // L, R
 }
 
 impl Sample {
@@ -24,6 +24,8 @@ impl Sample {
     ///
     /// ```
     /// let sample = Sample::new("my_samples/piano.ogg", 60); // C4 = root note, anything above or below will be pitch shifted
+    ///
+    /// assert_eq!(sample.root_note, 60);
     /// ```
     pub fn new(path: &str, root_note: u8) -> Self {
         let file = File::open(path).unwrap();
@@ -96,11 +98,32 @@ impl Sample {
         }
     }
 
+    /// Adds `effect` to the audio data, modifying it using the `Effect` trait's `modify` method.
     pub fn add_effect<T>(&mut self, effect: T)
     where
         T: Effect,
     {
         self.data = effect.modify(self.sample_rate, &self.data);
+    }
+
+    /// Returns the root note of the sample.
+    pub fn root_note(&self) -> u8 {
+        self.root_note
+    }
+
+    /// Returns the panning of the sample.
+    pub fn pan(&self) -> f32 {
+        self.pan
+    }
+
+    /// Returns the audio sample rate of the sample.
+    pub fn sample_rate(&self) -> u32 {
+        self.sample_rate
+    }
+
+    /// Returns the audio data (left and right stereo channels) of the sample.
+    pub fn data(&self) -> &[(f32, f32)] {
+        &self.data
     }
 
     /// Set the root note pitch of the sample (midi numbers 0-127)
