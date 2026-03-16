@@ -5,6 +5,7 @@ edition = "2024"
 license = "GPL-3.0"
 authors = ["Motivation Software Inc."]
 description = "Programmatic digital audio workstation for MIDI"
+repository = "https://github.com/motivation-inc/dawdel"
 
 [dependencies]
 hound = "3.5.1"
