@@ -9,7 +9,7 @@ fn beats_to_ticks(beats: f32, tpq: u16) -> u32 {
 
 /// Renders all track samples + notes into two left and right master buffers
 fn render_tracks_wav(sample_rate: u32, song: &Song) -> (Vec<f32>, Vec<f32>) {
-    let tracks = song.clone().tracks();
+    let tracks = song.tracks();
 
     if tracks.is_empty() {
         return (Vec::new(), Vec::new());
@@ -106,7 +106,7 @@ pub fn export_midi(name: &str, song: &Song) {
 
     let mut midi_tracks = Vec::new();
 
-    for track in song.clone().tracks() {
+    for track in song.tracks() {
         let mut events: Vec<(u32, TrackEventKind)> = Vec::new();
 
         for note in track.notes() {

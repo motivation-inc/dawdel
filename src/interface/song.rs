@@ -152,8 +152,8 @@ impl Song {
     ///
     /// assert_eq!(song.tracks()[0].channel(), 0);
     /// ```
-    pub fn tracks(self) -> Vec<Track> {
-        self.tracks
+    pub fn tracks(&self) -> &[Track] {
+        &self.tracks
     }
 
     pub fn export(&self, name: &str, export_type: ExportType, open_in_default_app: bool) {

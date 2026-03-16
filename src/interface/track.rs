@@ -47,9 +47,9 @@ impl Track {
         self.channel
     }
 
-    /// Returns a Vec of `Note` objects contained on the track.
-    pub fn notes(&self) -> Vec<Note> {
-        self.notes.clone()
+    /// Returns an array of `Note` objects contained on the track.
+    pub fn notes(&self) -> &[Note] {
+        &self.notes
     }
 
     /// Returns the ending beat of the most recent note.
