@@ -34,7 +34,9 @@ pub struct ReverbEffect {
 }
 
 impl ReverbEffect {
-    /// Constructs a new reverb effect, where `room_size` represents the simulated "room", `wet` is the wet amount, and `dry` is the dry amount.
+    /// Constructs a new reverb effect, where `room_size` represents the simulated "room", `wet` is the echo volume, and `dry` is the original signal volume.
+    ///
+    /// All parameters are defined by the limit `x > 0`, and `x <= 1`.
     pub fn new(room_size: f32, wet: f32, dry: f32) -> Self {
         Self {
             room_size,
@@ -71,6 +73,50 @@ impl Effect for ReverbEffect {
             output[i].0 = output[i].0 * self.wet + data[i].0 * self.dry;
 
             output[i].1 = output[i].1 * self.wet + data[i].1 * self.dry;
+        }
+
+        output
+    }
+}
+
+/// A delay effect for audio samples.
+pub struct DelayEffect {
+    delay_time: f32,
+    feedback: f32,
+    wet: f32,
+    dry: f32,
+}
+
+impl DelayEffect {
+    /// Constructs a new delay effect, where `delay_time` represents the distance between echoes,
+    /// `feedback` controls how many repeats. `wet` is the echo volume, and `dry` is the original signal volume.
+    ///
+    /// All parameters are defined by the limit `x > 0`, and `x <= 1`.
+    pub fn new(delay_time: f32, feedback: f32, wet: f32, dry: f32) -> Self {
+        Self {
+            delay_time,
+            feedback,
+            wet,
+            dry,
+        }
+    }
+}
+
+impl Effect for DelayEffect {
+    fn modify(&self, sample_rate: u32, data: &[(f32, f32)]) -> Vec<(f32, f32)> {
+        let delay_samples = (self.delay_time * sample_rate as f32) as usize;
+
+        let mut output = data.to_vec();
+
+        for i in delay_samples..output.len() {
+            let (delayed_l, delayed_r) = output[i - delay_samples];
+
+            let echo_l = delayed_l * self.feedback;
+            let echo_r = delayed_r * self.feedback;
+
+            output[i].0 = data[i].0 * self.dry + echo_l * self.wet;
+
+            output[i].1 = data[i].1 * self.dry + echo_r * self.wet;
         }
 
         output

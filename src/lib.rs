@@ -22,4 +22,4 @@
 mod engine;
 mod interface;
 
-pub use interface::{Effect, ExportType, ReverbEffect, Sample, Song, Track};
+pub use interface::{DelayEffect, Effect, ExportType, ReverbEffect, Sample, Song, Track};

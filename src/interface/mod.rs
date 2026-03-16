@@ -5,7 +5,7 @@ mod song;
 mod track;
 
 pub use {
-    effect::{Effect, ReverbEffect},
+    effect::{DelayEffect, Effect, ReverbEffect},
     sample::Sample,
     song::{ExportType, Song},
     track::Track,
