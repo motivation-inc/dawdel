@@ -1,5 +1,5 @@
 # `dawdel`
-dawdel (daa·dell) is a programmatic digital audio workstation crate for MIDI, written in Rust.
+dawdel (daa·dell) is a programmatic music generation crate, written in Rust. It provides a "DAW-like" interface for working with samples, tracks, notes, exporting, and more.
 
 ```rust
 use dawdel::{ExportType, Sample, Song};

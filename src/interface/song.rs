@@ -204,7 +204,6 @@ impl Song {
                     open::that(&file_name).expect("Error opening export");
                 }
             }
-            _ => {}
         }
     }
 }

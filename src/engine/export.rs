@@ -61,7 +61,7 @@ fn render_tracks_wav(sample_rate: u32, song: &Song) -> (Vec<f32>, Vec<f32>) {
                 // constant power panning
                 let angle = (pan + 1.0) * std::f32::consts::FRAC_PI_4;
                 let l = s_l * angle.cos();
-                let r = s_l * angle.sin();
+                let r = s_r * angle.sin();
 
                 left[dest_index] += l;
                 right[dest_index] += r;
