@@ -1,7 +1,7 @@
 /// Trait for audio effect implementations.
 ///
-/// `modify` takes the input `data` (left and right audio channels) and outputs `Vec<(f32, f32)>`
-/// (left and right audio channels). Anything that happens between is described as an "audio effect".
+/// `modify` takes `input` (left and right audio channels) and outputs `Vec<(f32, f32)>`
+/// left and right audio channels. Anything that happens between is described as an "audio effect".
 ///
 /// # Example
 ///
@@ -13,10 +13,10 @@
 /// }
 ///
 /// impl Effect for RandomEffect {
-///     fn modify(&self, sample_rate: u32, data: &[(f32, f32)]) -> Vec<(f32, f32)> {
+///     fn modify(&self, sample_rate: u32, input: &[(f32, f32)]) -> Vec<(f32, f32)> {
 ///         let mut new_data = Vec::new();
 ///
-///         for (l, r) in data {
+///         for (l, r) in input {
 ///             new_data.push((l + self.amount, r + self.amount))
 ///         }
 ///
@@ -25,7 +25,7 @@
 /// }
 /// ```
 pub trait Effect {
-    fn modify(&self, sample_rate: u32, data: &[(f32, f32)]) -> Vec<(f32, f32)>;
+    fn modify(&self, sample_rate: u32, input: &[(f32, f32)]) -> Vec<(f32, f32)>;
 }
 
 /// A reverb effect for audio samples.
@@ -49,7 +49,7 @@ impl ReverbEffect {
 }
 
 impl Effect for ReverbEffect {
-    fn modify(&self, sample_rate: u32, data: &[(f32, f32)]) -> Vec<(f32, f32)> {
+    fn modify(&self, sample_rate: u32, input: &[(f32, f32)]) -> Vec<(f32, f32)> {
         let reflections = [
             (0.012, 0.6),
             (0.017, 0.5),
@@ -58,7 +58,7 @@ impl Effect for ReverbEffect {
             (0.045, 0.2),
         ];
 
-        let mut output = data.to_vec();
+        let mut output = input.to_vec();
 
         for &(delay_sec, decay) in &reflections {
             let delay_samples = (delay_sec * self.room_size * sample_rate as f32) as usize;
@@ -72,9 +72,9 @@ impl Effect for ReverbEffect {
         }
 
         for i in 0..output.len() {
-            output[i].0 = output[i].0 * self.wet + data[i].0 * self.dry;
+            output[i].0 = output[i].0 * self.wet + input[i].0 * self.dry;
 
-            output[i].1 = output[i].1 * self.wet + data[i].1 * self.dry;
+            output[i].1 = output[i].1 * self.wet + input[i].1 * self.dry;
         }
 
         output
@@ -105,10 +105,10 @@ impl DelayEffect {
 }
 
 impl Effect for DelayEffect {
-    fn modify(&self, sample_rate: u32, data: &[(f32, f32)]) -> Vec<(f32, f32)> {
+    fn modify(&self, sample_rate: u32, input: &[(f32, f32)]) -> Vec<(f32, f32)> {
         let delay_samples = (self.delay_time * sample_rate as f32) as usize;
 
-        let mut output = data.to_vec();
+        let mut output = input.to_vec();
 
         for i in delay_samples..output.len() {
             let (delayed_l, delayed_r) = output[i - delay_samples];
@@ -116,8 +116,8 @@ impl Effect for DelayEffect {
             let echo_l = delayed_l * self.feedback;
             let echo_r = delayed_r * self.feedback;
 
-            output[i].0 = data[i].0 * self.dry + echo_l * self.wet;
-            output[i].1 = data[i].1 * self.dry + echo_r * self.wet;
+            output[i].0 = input[i].0 * self.dry + echo_l * self.wet;
+            output[i].1 = input[i].1 * self.dry + echo_r * self.wet;
         }
 
         output
