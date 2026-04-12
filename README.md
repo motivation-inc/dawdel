@@ -1,5 +1,5 @@
 # `dawdel`
-dawdel (daa·dell) is a programmatic music generation crate for Rust. It provides a "DAW-like" interface for working with samples, tracks, notes, exporting, and more.
+Dawdel (daa·dell) is a programmatic music generation crate for Rust. It provides a "DAW-like" interface for working with samples, tracks, notes, exporting, and more.
 
 ```rust
 use dawdel::{ExportType, Sample, Song};
@@ -22,14 +22,14 @@ fn main() {
 ```
 
 ## About
-dawdel is both an audio processing engine and MIDI toolkit. Its a simple, yet very powerful toolkit designed for working with:
+Dawdel is both an audio processing engine and MIDI toolkit. Its a simple, yet very powerful toolkit designed for working with:
 
 - **Samples** Create samples + effects from all audio formats supported by [Symphonia](https://github.com/pdeljanov/Symphonia).
 - **Tracks** Organize music into seperate tracks and control MIDI channeling. 
 - **Exporting** Render both `.wav` and `.mid` formats (`.mp3` support coming in future updates.)
 
 ## Notes And Chords
-dawdel supports using standard `u8` types to represent MIDI notes 0-127, but it also includes helper macros like `note!()` and `chord!()` so actual music notation can be used.
+Dawdel supports using standard `u8` types to represent MIDI notes 0-127, but it also includes helper macros like `note!()` and `chord!()` so actual music notation can be used.
 
 ```rust
 use dawdel::{note, chord};
@@ -39,7 +39,7 @@ assert_eq!(chord!(maj note!(C, 4)), vec![60, 64, 67]);
 ```
 
 ## Custom Effects
-dawdel includes the `Effect` trait, a configurable trait that can be applied to Rust structs to create your own audio effects. 
+Dawdel includes the `Effect` trait, a configurable trait that can be applied to Rust structs to create your own audio effects. 
 
 ```rust
 use dawdel::Effect;
@@ -61,6 +61,8 @@ impl Effect for SineEffect {
 }
 ```
 
-## Free And Open-Source
+# Free & Open-Source
 
-dawdel is 100% free with no drawbacks or limitations. There is no "premium" version; you get the latest and greatest, all licensed under the GPL.
+Dawdel is 100% free with no drawbacks or limitations. There is no "premium" version; you get the latest and greatest, all licensed under the GPL-3.0.
+
+All source code is public, to anyone. There is no "hidden mechanism" included in this repository; every reference and used factor exists completely and fully.
