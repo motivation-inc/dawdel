@@ -4,7 +4,7 @@ version = "0.1.1"
 edition = "2024"
 license = "GPL-3.0"
 authors = ["Motivation Software Inc."]
-description = "Programmatic digital audio workstation for MIDI"
+description = "A music generation library for Rust"
 repository = "https://github.com/motivation-inc/dawdel"
 
 [dependencies]
