@@ -61,8 +61,6 @@ impl Effect for SineEffect {
 }
 ```
 
-## Planned Updates
+## Free And Open-Source
 
-- MP3 export support
-- Potential CLI + playback tool for hot-reloading music (`dawdel-cli`)
-- More pre-built effects, like `DistortionEffect`, `TremoloEffect`, etc.
+dawdel is 100% free with no drawbacks or limitations. There is no "premium" version; you get the latest and greatest, all licensed under the GPL.
