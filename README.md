@@ -16,8 +16,8 @@ fn main() {
     }
 
     song.add_track(track1);
-    song.export("output", ExportType::MIDI, false); // export the midi file
-    song.export("output", ExportType::WAV(44100), true); // export the wav audio at 44100 samples and open it
+    song.export("output.mid", ExportType::MIDI, false); // export the midi file
+    song.export("output.wav", ExportType::WAV(44100), true); // export the wav file at 44100 samples and open it
 }
 ```
 
