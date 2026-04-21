@@ -3,7 +3,7 @@ use dawdel::{chord, note};
 
 fn main() {
     let mut song = Song::new(120.0); // 120 bpm
-    let mut track1 = song.create_track(Sample::new("test.wav", 60), 1); // construct a new track
+    let mut track1 = song.create_track(Sample::new("examples/test.wav", 60), 1); // construct a new track
 
     for _ in 0..8 {
         // generate a loop of notes and chords
