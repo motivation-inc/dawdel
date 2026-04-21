@@ -12,7 +12,11 @@ pub struct Track {
 }
 
 impl Track {
-    /// Constructs a new track object with the specified `sample`, `channel` being midi channels 0-15, and `bpm` being the beats per minute of the track.
+    /// Constructs a new track object.
+    ///
+    /// - `sample`: the `Sample` object of the track
+    /// - `channel`: the MIDI channel of the track (0-15)
+    /// - `bpm`: the beats per minute of the track
     ///
     /// # Example
     ///
@@ -63,7 +67,12 @@ impl Track {
         self.offset
     }
 
-    /// Appends a note to the track, with `pitch` midi numbers 0-127, `velocity` midi numbers 0-127, `start` and `duration` in beats.
+    /// Appends a note to the track.
+    ///
+    /// - `pitch`: MIDI numbers (0-127)
+    /// - `velocity` MIDI numbers (0-127)
+    /// - `start`: the note start (in beats)
+    /// - `duration`: the note duration (in beats)
     ///
     /// # Example
     ///
@@ -86,7 +95,12 @@ impl Track {
         });
     }
 
-    /// Appends a chord to the track, with `notes` a Vec of indexes midi numbers 0-127, `velocity` midi numbers 0-127, `start` and `duration` in beats.
+    /// Appends a chord to the track.
+    ///
+    /// - `notes`: an array of indexed MIDI numbers (0-127)
+    /// - `velocity`: MIDI numbers (0-127)
+    /// - `start`: the chord start (in beats)
+    /// - `duration`: the chord duration (in beats)
     ///
     /// # Example
     ///
@@ -94,7 +108,7 @@ impl Track {
     /// use dawdel::{Track, Sample};
     ///
     /// let mut track1 = Track::new(Sample::new("my_samples/piano.wav", 60), 0, 0.0);
-    /// track1.chord(vec![60, 64, 67], 127, 0.0, 2.0); // Csus4 at full velocity, played for 2 beats
+    /// track1.chord(&[60, 64, 67], 127, 0.0, 2.0); // Csus4 at full velocity, played for 2 beats
     /// ```
     pub fn chord(&mut self, notes: Vec<u8>, velocity: u8, start: f32, duration: f32) {
         if start + duration > self.current_beat {
@@ -111,7 +125,9 @@ impl Track {
         }
     }
 
-    /// Offset the track to `offset`.
+    /// Offset the track.
+    ///
+    /// - `offset`: the track's offset (in beats) from the origin
     ///
     /// # Example
     ///

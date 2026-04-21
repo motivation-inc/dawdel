@@ -1,8 +1,5 @@
 /// Trait for audio effect implementations.
 ///
-/// `modify` takes `input` (left and right audio channels) and outputs `Vec<(f32, f32)>`
-/// left and right audio channels. Anything that happens between is described as an "audio effect".
-///
 /// # Example
 ///
 /// ```no_run
@@ -25,10 +22,17 @@
 /// }
 /// ```
 pub trait Effect {
+    /// How the input data in an effect is modified.
+    ///
+    /// - `sample_rate`: the audio sample rate
+    /// - `input`: the input audio channel data (left, right)
+    ///
+    /// This function outputs a `Vec` of left and right audio channel data. Anything that happens between
+    /// is described as an "audio effect".
     fn modify(&self, sample_rate: u32, input: &[(f32, f32)]) -> Vec<(f32, f32)>;
 }
 
-/// A reverb effect for audio samples.
+/// A reverb effect.
 pub struct ReverbEffect {
     room_size: f32,
     wet: f32,
@@ -36,7 +40,11 @@ pub struct ReverbEffect {
 }
 
 impl ReverbEffect {
-    /// Constructs a new reverb effect, where `room_size` represents the simulated "room", `wet` is the echo volume, and `dry` is the original signal volume.
+    /// Constructs a new reverb effect.
+    ///
+    /// - `room_size`: the simulated "room"
+    /// - `wet`: the echo volume
+    /// - `dry`: the original signal volume
     ///
     /// All parameters are defined by the limit `x > 0`, and `x <= 1`.
     pub fn new(room_size: f32, wet: f32, dry: f32) -> Self {
@@ -81,7 +89,7 @@ impl Effect for ReverbEffect {
     }
 }
 
-/// A delay effect for audio samples.
+/// A delay effect.
 pub struct DelayEffect {
     delay_time: f32,
     feedback: f32,
@@ -90,8 +98,12 @@ pub struct DelayEffect {
 }
 
 impl DelayEffect {
-    /// Constructs a new delay effect, where `delay_time` represents the distance between echoes,
-    /// `feedback` controls how many repeats. `wet` is the echo volume, and `dry` is the original signal volume.
+    /// Constructs a new delay effect
+    ///
+    /// - `delay_time`: the distance between echoes
+    /// - `feedback`: how many echo repetitions
+    /// - `wet`: the echo volume
+    /// - `dry`: the original signal volume
     ///
     /// All parameters are defined by the limit `x > 0`, and `x <= 1`.
     pub fn new(delay_time: f32, feedback: f32, wet: f32, dry: f32) -> Self {

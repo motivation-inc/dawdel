@@ -8,7 +8,7 @@ use symphonia::default::{get_codecs, get_probe};
 
 use crate::interface::Effect;
 
-/// A sample object containing sound data, panning, sample rates, and a root note representing the general pitch shift of the sample.
+/// A sample object.
 #[derive(Debug, Clone)]
 pub struct Sample {
     root_note: u8,
@@ -18,7 +18,10 @@ pub struct Sample {
 }
 
 impl Sample {
-    /// Constructs a new sample object, where `path` is a path to the audio file (`wav`, `mp3`, `.ogg`, `.flac`, `.acc`, and more), and `root_note` is the midi note number (0-127) of the base note.
+    /// Constructs a new sample object.
+    ///
+    /// - `path`: path to the audio file (`wav`, `mp3`, `.ogg`, `.flac`, `.acc`, and more supported)
+    /// - `root_note`: the midi note number (0-127) of the base note
     ///
     /// # Example
     ///
@@ -103,7 +106,9 @@ impl Sample {
         }
     }
 
-    /// Adds `effect` to the audio data, modifying it using the `Effect` trait's `modify` method.
+    /// Adds the effect to the effects chain, modifying the sample's audio data.
+    ///
+    /// - `effect`: the audio effect that implements the `Effect` trait
     pub fn add_effect<T>(&mut self, effect: T)
     where
         T: Effect,
@@ -126,19 +131,21 @@ impl Sample {
         self.sample_rate
     }
 
-    /// Returns the audio data (left and right stereo channels) of the sample.
+    /// Returns the audio data (left and right stereo channel data) of the sample.
     pub fn data(&self) -> &[(f32, f32)] {
         &self.data
     }
 
-    /// Set the root note pitch of the sample (midi numbers 0-127)
+    /// Set the root note pitch of the sample (MIDI numbers 0-127)
     pub fn set_root_note(&mut self, root_note: u8) {
         self.root_note = root_note;
     }
 
-    /// Set the stereo panning of the sample (-1.0 to 1.0, where negative values pan left, and positive values pan right)
+    /// Set the stereo panning of the sample.
     ///
-    /// By default, panning is set to 0.0 (centered) when using `Sample::new()`
+    /// - `pan`: the audio panning, where negative values pan left and positive values pan right
+    ///
+    /// By default, panning is set to 0.0 (centered) when constructing a new `Sample`.
     pub fn set_pan(&mut self, pan: f32) {
         self.pan = pan
     }

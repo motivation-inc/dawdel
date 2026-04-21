@@ -13,7 +13,7 @@ pub enum ExportType {
     WAV(u32),
 }
 
-/// A song object containing all track objects and a BPM variable.
+/// A song object.
 #[derive(Debug, Clone)]
 pub struct Song {
     bpm: f32,
@@ -22,6 +22,14 @@ pub struct Song {
 
 impl Song {
     /// Constructs a new song object, where `bpm` is beats per minute.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use dawdel::Song;
+    ///
+    /// let song = Song::new(120.0); // constructs a new song at 120 bpm
+    /// ```
     pub fn new(bpm: f32) -> Self {
         Self {
             bpm,
@@ -29,7 +37,10 @@ impl Song {
         }
     }
 
-    /// Loads the midi `file` into seperated tracks using `sample`, loading the midi starting at `starting_beat`.
+    /// Loads the midi `file` into seperated tracks.
+    ///
+    /// - `sample`: the `Sample` object to use during loading
+    /// - `starting_beat`: the starting beat (where the track loads in at)
     ///
     /// # Example
     ///
@@ -117,7 +128,11 @@ impl Song {
 
     /// Constructs a new track object using the song bpm.
     ///
-    /// _This function will not add the track object to the song, use `add_track` to append the track to the song._
+    /// - `sample`: the track's `Sample` object
+    /// - `channel`: the MIDI channel (0-15) of the track
+    ///
+    /// _This function will not append the track object to the song; use `Song::add_track` to
+    /// append the track to the song._
     ///
     /// # Example
     ///
@@ -133,7 +148,9 @@ impl Song {
         Track::new(sample, channel, self.bpm)
     }
 
-    /// Adds `track` to the list of tracks contained in the song.
+    /// Appends a track to the song.
+    ///
+    /// - `track`: the `Track` object to append
     ///
     /// # Example
     ///
@@ -181,8 +198,11 @@ impl Song {
         &self.tracks
     }
 
-    /// Export the all tracks with the file `name` and type `export_type`.
-    /// `open_in_default_app` will open the exported file in the default app for that file type.
+    /// Export all tracks contained in the song.
+    ///
+    /// - `filename`: the file name to write to
+    /// - `export_type`: the audio format to export in
+    /// - `open_in_default_app`: open the exported file in the system's default app for that file type
     ///
     /// # Example
     ///
